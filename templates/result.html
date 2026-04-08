@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Result — Fake Job Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Fake Job Detector</h1>
+      <a href="/" class="back-link">&#8592; Analyze another job</a>
+    </div>
+
+    <!-- Verdict banner -->
+    <div class="verdict-card verdict-{{ prediction.risk_label | lower | replace(' ', '-') }}">
+      <div class="verdict-label">{{ prediction.risk_label }}</div>
+      <div class="verdict-score">Risk score: {{ (prediction.final_score * 100) | round(1) }}%</div>
+      <div class="verdict-source">Source: {{ source }}</div>
+    </div>
+
+    <!-- Score breakdown -->
+    <div class="card">
+      <h2>Score breakdown</h2>
+      <div class="score-grid">
+
+        <div class="score-item">
+          <div class="score-label">ML model</div>
+          <div class="score-bar-wrap">
+            <div class="score-bar" style="width:{{ (prediction.ml_score * 100)|round }}%"></div>
+          </div>
+          <div class="score-val">{{ (prediction.ml_score * 100)|round(1) }}%</div>
+        </div>
+
+        <div class="score-item">
+          <div class="score-label">Suspicious phrases</div>
+          <div class="score-bar-wrap">
+            <div class="score-bar" style="width:{{ (prediction.phrase_score * 100)|round }}%"></div>
+          </div>
+          <div class="score-val">{{ (prediction.phrase_score * 100)|round(1) }}%</div>
+        </div>
+
+        <div class="score-item">
+          <div class="score-label">Salary anomaly</div>
+          <div class="score-bar-wrap">
+            <div class="score-bar" style="width:{{ (prediction.salary.risk_score * 100)|round }}%"></div>
+          </div>
+          <div class="score-val">{{ (prediction.salary.risk_score * 100)|round(1) }}%</div>
+        </div>
+
+      </div>
+
+      <!-- Salary note -->
+      <p class="salary-note">
+        {{ prediction.salary.reason }}
+      </p>
+
+      <!-- Suspicious phrases found -->
+      {% if prediction.suspicious_phrases %}
+      <div class="phrase-box">
+        <div class="phrase-title">Suspicious phrases detected</div>
+        {% for phrase in prediction.suspicious_phrases %}
+        <span class="phrase-chip">{{ phrase }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- SHAP word highlights -->
+    <div class="card">
+      <h2>Word-level analysis</h2>
+      <p class="hint">
+        <span class="legend-red">Red</span> words push toward fake &nbsp;·&nbsp;
+        <span class="legend-green">Green</span> words push toward real &nbsp;·&nbsp;
+        Darker = stronger signal
+      </p>
+      <div class="shap-text">{{ shap_html | safe }}</div>
+
+      <div class="word-lists">
+        {% if fake_words %}
+        <div class="word-list">
+          <div class="word-list-title red">Top fake signals</div>
+          {% for word, val in fake_words %}
+          <div class="word-row">
+            <span class="word-name">{{ word }}</span>
+            <div class="word-bar-wrap">
+              <div class="word-bar red" style="width:{{ (val * 100)|round }}%"></div>
+            </div>
+            <span class="word-val">{{ "%.3f"|format(val) }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if real_words %}
+        <div class="word-list">
+          <div class="word-list-title green">Top real signals</div>
+          {% for word, val in real_words %}
+          <div class="word-row">
+            <span class="word-name">{{ word }}</span>
+            <div class="word-bar-wrap">
+              <div class="word-bar green" style="width:{{ (val * 100 * -1)|round }}%"></div>
+            </div>
+            <span class="word-val">{{ "%.3f"|format(val) }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Model confidence -->
+    <div class="card">
+      <h2>Model confidence</h2>
+      <div class="conf-grid">
+        <div class="conf-item">
+          <div class="conf-label">Logistic Regression</div>
+          <div class="conf-val">{{ (prediction.lr_prob * 100)|round(1) }}% fake</div>
+        </div>
+        <div class="conf-item">
+          <div class="conf-label">Naive Bayes</div>
+          <div class="conf-val">{{ (prediction.nb_prob * 100)|round(1) }}% fake</div>
+        </div>
+        <div class="conf-item">
+          <div class="conf-label">Ensemble (final)</div>
+          <div class="conf-val">{{ (prediction.ml_score * 100)|round(1) }}% fake</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

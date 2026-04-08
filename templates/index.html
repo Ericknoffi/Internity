@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fake Job Detector</title>
+</head>
+<body style="font-family:sans-serif; max-width:700px; margin:40px auto; padding:20px;">
+
+  <h1>Fake Job Detector</h1>
+  <p style="color:#666;">Paste a job description, enter a URL, or upload a PDF.</p>
+
+  {% if error %}
+  <div style="background:#fef2f2;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:16px;">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <div style="background:#fff;border:1px solid #e5e5e3;border-radius:12px;padding:24px;">
+
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button id="btn-text" onclick="switchTab('text',this)"
+        style="padding:8px 18px;border:1px solid #ccc;border-radius:8px;cursor:pointer;background:#1a1a1a;color:#fff;">
+        Paste Text
+      </button>
+      <button id="btn-url" onclick="switchTab('url',this)"
+        style="padding:8px 18px;border:1px solid #ccc;border-radius:8px;cursor:pointer;background:#fff;color:#333;">
+        Job URL
+      </button>
+      <button id="btn-pdf" onclick="switchTab('pdf',this)"
+        style="padding:8px 18px;border:1px solid #ccc;border-radius:8px;cursor:pointer;background:#fff;color:#333;">
+        Upload PDF
+      </button>
+    </div>
+
+    <form action="/analyze" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="input_type" id="itype" value="text"/>
+
+      <!-- Text tab -->
+      <div id="tab-text">
+        <textarea name="job_text" rows="10"
+          style="width:100%;padding:12px;border:1px solid #e5e5e3;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;"
+          placeholder="Paste the full job description here..."></textarea>
+      </div>
+
+      <!-- URL tab -->
+      <div id="tab-url" style="display:none;">
+        <input type="url" name="url"
+          style="width:100%;padding:12px;border:1px solid #e5e5e3;border-radius:8px;font-size:14px;"
+          placeholder="https://www.indeed.com/viewjob?jk=..."/>
+        <p style="font-size:13px;color:#888;margin-top:6px;">
+          Works with Indeed, Naukri, and most job boards. LinkedIn is not supported.
+        </p>
+      </div>
+
+      <!-- PDF tab -->
+      <div id="tab-pdf" style="display:none;">
+        <div onclick="document.getElementById('pdf_file').click()"
+          style="border:2px dashed #ccc;border-radius:10px;padding:40px;text-align:center;cursor:pointer;">
+          <p style="font-size:16px;color:#888;">Click to select a PDF file</p>
+          <p style="font-size:13px;color:#aaa;">Max 5MB</p>
+          <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" style="display:none"
+            onchange="document.getElementById('fname').textContent = this.files[0]?.name"/>
+        </div>
+        <p id="fname" style="font-size:13px;color:#888;margin-top:8px;"></p>
+      </div>
+
+      <button type="submit"
+        style="width:100%;margin-top:20px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;">
+        Analyze Job Posting
+      </button>
+
+    </form>
+  </div>
+
+  <script>
+    function switchTab(name, btn) {
+      ['text','url','pdf'].forEach(t => {
+        document.getElementById('tab-'+t).style.display = 'none';
+      });
+      document.getElementById('tab-'+name).style.display = 'block';
+      document.getElementById('itype').value = name;
+
+      ['btn-text','btn-url','btn-pdf'].forEach(id => {
+        const b = document.getElementById(id);
+        b.style.background = '#fff';
+        b.style.color = '#333';
+      });
+      btn.style.background = '#1a1a1a';
+      btn.style.color = '#fff';
+    }
+  </script>
+
+</body>
+</html>
