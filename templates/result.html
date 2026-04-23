@@ -1,135 +1,344 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Result — Fake Job Detector</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Result &mdash; Fake Job Detector</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0f0f0f;color:#e8e8e8;padding:28px 20px;min-height:100vh}
+.wrapper{max-width:820px;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.topbar h1{font-size:17px;font-weight:600;color:#fff}
+.back{font-size:13px;color:#555;text-decoration:none;border:1px solid #222;padding:6px 14px;border-radius:8px;transition:all 0.2s}
+.back:hover{color:#fff;border-color:#444}
+
+/* Verdict */
+.verdict{border-radius:16px;padding:28px 28px 24px;margin-bottom:18px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+.verdict.safe{background:#071207;border:1px solid #1a3a1a}
+.verdict.suspicious{background:#130f00;border:1px solid #332800}
+.verdict.high-risk{background:#130404;border:1px solid #331010}
+.verdict-left{}
+.verdict-tag{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.safe .verdict-tag{color:#166534}
+.suspicious .verdict-tag{color:#92400e}
+.high-risk .verdict-tag{color:#7f1d1d}
+.verdict-label{font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
+.safe .verdict-label{color:#4ade80}
+.suspicious .verdict-label{color:#fbbf24}
+.high-risk .verdict-label{color:#f87171}
+.verdict-meta{font-size:13px;color:#555}
+.verdict-meta span{color:#888;margin-right:16px}
+.chart-wrap{width:130px;height:130px;flex-shrink:0}
+
+/* Cards */
+.card{background:#161616;border:1px solid #1e1e1e;border-radius:14px;padding:22px;margin-bottom:16px}
+.card-title{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:18px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* Score bars */
+.score-row{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+.score-name{width:160px;font-size:13px;color:#888;flex-shrink:0}
+.score-track{flex:1;background:#0f0f0f;border-radius:4px;height:7px;overflow:hidden}
+.score-fill{height:7px;border-radius:4px;transition:width 1s ease}
+.score-fill.low{background:#4ade80}
+.score-fill.mid{background:#fbbf24}
+.score-fill.high{background:#f87171}
+.score-pct{width:44px;text-align:right;font-size:12px;color:#555}
+
+/* Chips */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:12px;padding:4px 11px;border-radius:20px;font-weight:500}
+.chip-red{background:#1a0808;border:1px solid #2e1515;color:#f87171}
+.chip-amber{background:#130f00;border:1px solid #2e2200;color:#fbbf24}
+.chip-gray{background:#161616;border:1px solid #222;color:#777}
+.chip-green{background:#071207;border:1px solid #1a3a1a;color:#4ade80}
+
+/* SHAP */
+.shap-box{background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;padding:16px;font-size:14px;line-height:2.3;margin-bottom:16px}
+.legend{display:flex;gap:18px;font-size:12px;color:#555;margin-bottom:12px;flex-wrap:wrap}
+.leg-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+/* Word bars */
+.word-title{font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px}
+.word-title.red{color:#f87171}
+.word-title.green{color:#4ade80}
+.word-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.word-name{width:96px;font-size:12px;font-family:monospace;color:#888;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.word-track{flex:1;background:#0f0f0f;border-radius:3px;height:5px}
+.word-bar-r{height:5px;border-radius:3px;background:#f87171}
+.word-bar-g{height:5px;border-radius:3px;background:#4ade80}
+.word-val{font-size:11px;color:#444;width:44px;text-align:right}
+
+/* Conf boxes */
+.conf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.conf-box{background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;padding:14px;text-align:center}
+.conf-num{font-size:22px;font-weight:700;color:#fff;margin-bottom:3px}
+.conf-lbl{font-size:11px;color:#444;text-transform:uppercase;letter-spacing:0.4px}
+
+/* Flags */
+.flag-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #1a1a1a;font-size:13px;color:#888}
+.flag-row:last-child{border-bottom:none}
+.flag-dot{width:6px;height:6px;border-radius:50%;background:#f87171;margin-top:5px;flex-shrink:0}
+
+/* Note box */
+.note{background:#0f0f0f;border:1px solid #1a1a1a;border-radius:8px;padding:10px 14px;font-size:13px;color:#555;margin-top:12px;line-height:1.5}
+
+@media(max-width:620px){
+  .verdict{grid-template-columns:1fr}.chart-wrap{display:none}
+  .two-col,.conf-grid{grid-template-columns:1fr}
+  .score-name{width:120px}
+}
+</style>
 </head>
 <body>
+<div class="wrapper">
 
-  <div class="container">
-    <div class="header">
-      <h1>Fake Job Detector</h1>
-      <a href="/" class="back-link">&#8592; Analyze another job</a>
-    </div>
+  <div class="topbar">
+    <h1>Fake Job Detector</h1>
+    <a href="/" class="back">&larr; Analyze another</a>
+  </div>
 
-    <!-- Verdict banner -->
-    <div class="verdict-card verdict-{{ prediction.risk_label | lower | replace(' ', '-') }}">
+  <!-- Verdict banner -->
+  <div class="verdict {{ prediction.risk_label | lower | replace(' ','-') }}">
+    <div class="verdict-left">
+      <div class="verdict-tag">Analysis complete</div>
       <div class="verdict-label">{{ prediction.risk_label }}</div>
-      <div class="verdict-score">Risk score: {{ (prediction.final_score * 100) | round(1) }}%</div>
-      <div class="verdict-source">Source: {{ source }}</div>
+      <div class="verdict-meta">
+        <span>Risk score: {{ (prediction.final_score * 100)|round(1) }}%</span>
+        <span>Source: {{ source }}</span>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="donut"></canvas>
+    </div>
+  </div>
+
+  <!-- Score breakdown + bar chart -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Score breakdown</div>
+
+      {% set scores = [
+        ("ML model", prediction.ml_score),
+        ("Suspicious phrases", prediction.phrase_score),
+        ("Salary anomaly", prediction.salary.risk_score),
+        ("Contact red flags", contact.risk_score),
+        ("Keyword analysis", keywords.risk_score),
+      ] %}
+
+      {% for name, val in scores %}
+      {% set pct = (val * 100)|round %}
+      <div class="score-row">
+        <div class="score-name">{{ name }}</div>
+        <div class="score-track">
+          <div class="score-fill {% if pct < 35 %}low{% elif pct < 65 %}mid{% else %}high{% endif %}"
+               style="width:{{ pct }}%"></div>
+        </div>
+        <div class="score-pct">{{ pct }}%</div>
+      </div>
+      {% endfor %}
+
+      {% if prediction.salary.reason %}
+      <div class="note">{{ prediction.salary.reason }}</div>
+      {% endif %}
     </div>
 
-    <!-- Score breakdown -->
     <div class="card">
-      <h2>Score breakdown</h2>
-      <div class="score-grid">
+      <div class="card-title">Signal radar</div>
+      <canvas id="barChart" height="200"></canvas>
+    </div>
+  </div>
 
-        <div class="score-item">
-          <div class="score-label">ML model</div>
-          <div class="score-bar-wrap">
-            <div class="score-bar" style="width:{{ (prediction.ml_score * 100)|round }}%"></div>
-          </div>
-          <div class="score-val">{{ (prediction.ml_score * 100)|round(1) }}%</div>
-        </div>
+  <!-- Flags detected -->
+  {% if prediction.suspicious_phrases or contact.flags %}
+  <div class="card">
+    <div class="card-title">Red flags detected</div>
 
-        <div class="score-item">
-          <div class="score-label">Suspicious phrases</div>
-          <div class="score-bar-wrap">
-            <div class="score-bar" style="width:{{ (prediction.phrase_score * 100)|round }}%"></div>
-          </div>
-          <div class="score-val">{{ (prediction.phrase_score * 100)|round(1) }}%</div>
-        </div>
-
-        <div class="score-item">
-          <div class="score-label">Salary anomaly</div>
-          <div class="score-bar-wrap">
-            <div class="score-bar" style="width:{{ (prediction.salary.risk_score * 100)|round }}%"></div>
-          </div>
-          <div class="score-val">{{ (prediction.salary.risk_score * 100)|round(1) }}%</div>
-        </div>
-
+    {% if prediction.suspicious_phrases %}
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:#f87171;font-weight:600;margin-bottom:7px">Suspicious phrases</div>
+      <div class="chips">
+        {% for p in prediction.suspicious_phrases %}
+        <span class="chip chip-red">{{ p }}</span>
+        {% endfor %}
       </div>
+    </div>
+    {% endif %}
 
-      <!-- Salary note -->
-      <p class="salary-note">
-        {{ prediction.salary.reason }}
-      </p>
+    {% if contact.flags %}
+    {% for flag in contact.flags %}
+    <div class="flag-row"><div class="flag-dot"></div><div>{{ flag }}</div></div>
+    {% endfor %}
+    {% endif %}
+  </div>
+  {% endif %}
 
-      <!-- Suspicious phrases found -->
-      {% if prediction.suspicious_phrases %}
-      <div class="phrase-box">
-        <div class="phrase-title">Suspicious phrases detected</div>
-        {% for phrase in prediction.suspicious_phrases %}
-        <span class="phrase-chip">{{ phrase }}</span>
+  <!-- Keyword analysis -->
+  <div class="card">
+    <div class="card-title">Keyword analysis</div>
+    <div style="font-size:13px;color:#666;margin-bottom:12px">
+      {{ keywords.total_words }} total words &middot;
+      Most frequent: <span style="font-family:monospace;color:#aaa">"{{ keywords.top_word }}"</span>
+      at <span style="color:{% if keywords.is_stuffed %}#f87171{% else %}#4ade80{% endif %}">{{ keywords.top_density }}%</span>
+      {% if keywords.is_stuffed %}<span class="chip chip-red" style="margin-left:6px;font-size:11px">Keyword stuffing</span>{% endif %}
+    </div>
+
+    <div class="two-col" style="gap:12px">
+      {% if keywords.urgency_keywords %}
+      <div>
+        <div style="font-size:11px;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px">Urgency</div>
+        <div class="chips">{% for w in keywords.urgency_keywords %}<span class="chip chip-red">{{ w }}</span>{% endfor %}</div>
+      </div>
+      {% endif %}
+      {% if keywords.money_keywords %}
+      <div>
+        <div style="font-size:11px;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px">Money</div>
+        <div class="chips">{% for w in keywords.money_keywords %}<span class="chip chip-amber">{{ w }}</span>{% endfor %}</div>
+      </div>
+      {% endif %}
+      {% if keywords.vague_keywords %}
+      <div>
+        <div style="font-size:11px;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px">Vague</div>
+        <div class="chips">{% for w in keywords.vague_keywords %}<span class="chip chip-gray">{{ w }}</span>{% endfor %}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- SHAP -->
+  <div class="card">
+    <div class="card-title">Word-level explanation (SHAP)</div>
+    <div class="legend">
+      <span><span class="leg-dot" style="background:rgba(248,113,113,0.7)"></span>Pushes toward fake</span>
+      <span><span class="leg-dot" style="background:rgba(74,222,128,0.6)"></span>Pushes toward real</span>
+      <span style="font-size:11px;color:#333">Hover any word to see its score</span>
+    </div>
+    <div class="shap-box">{{ shap_html | safe }}</div>
+
+    <div class="two-col">
+      {% if fake_words %}
+      <div>
+        <div class="word-title red">Top fake signals</div>
+        {% for word, val in fake_words %}
+        <div class="word-row">
+          <div class="word-name" title="{{ word }}">{{ word }}</div>
+          <div class="word-track"><div class="word-bar-r" style="width:{{ (val*100)|round }}%"></div></div>
+          <div class="word-val">{{ "%.3f"|format(val) }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if real_words %}
+      <div>
+        <div class="word-title green">Top real signals</div>
+        {% for word, val in real_words %}
+        <div class="word-row">
+          <div class="word-name" title="{{ word }}">{{ word }}</div>
+          <div class="word-track"><div class="word-bar-g" style="width:{{ [((val|float)*100*-1)|round, 100]|min }}%"></div></div>
+          <div class="word-val">{{ "%.3f"|format(val) }}</div>
+        </div>
         {% endfor %}
       </div>
       {% endif %}
     </div>
-
-    <!-- SHAP word highlights -->
-    <div class="card">
-      <h2>Word-level analysis</h2>
-      <p class="hint">
-        <span class="legend-red">Red</span> words push toward fake &nbsp;·&nbsp;
-        <span class="legend-green">Green</span> words push toward real &nbsp;·&nbsp;
-        Darker = stronger signal
-      </p>
-      <div class="shap-text">{{ shap_html | safe }}</div>
-
-      <div class="word-lists">
-        {% if fake_words %}
-        <div class="word-list">
-          <div class="word-list-title red">Top fake signals</div>
-          {% for word, val in fake_words %}
-          <div class="word-row">
-            <span class="word-name">{{ word }}</span>
-            <div class="word-bar-wrap">
-              <div class="word-bar red" style="width:{{ (val * 100)|round }}%"></div>
-            </div>
-            <span class="word-val">{{ "%.3f"|format(val) }}</span>
-          </div>
-          {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if real_words %}
-        <div class="word-list">
-          <div class="word-list-title green">Top real signals</div>
-          {% for word, val in real_words %}
-          <div class="word-row">
-            <span class="word-name">{{ word }}</span>
-            <div class="word-bar-wrap">
-              <div class="word-bar green" style="width:{{ (val * 100 * -1)|round }}%"></div>
-            </div>
-            <span class="word-val">{{ "%.3f"|format(val) }}</span>
-          </div>
-          {% endfor %}
-        </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Model confidence -->
-    <div class="card">
-      <h2>Model confidence</h2>
-      <div class="conf-grid">
-        <div class="conf-item">
-          <div class="conf-label">Logistic Regression</div>
-          <div class="conf-val">{{ (prediction.lr_prob * 100)|round(1) }}% fake</div>
-        </div>
-        <div class="conf-item">
-          <div class="conf-label">Naive Bayes</div>
-          <div class="conf-val">{{ (prediction.nb_prob * 100)|round(1) }}% fake</div>
-        </div>
-        <div class="conf-item">
-          <div class="conf-label">Ensemble (final)</div>
-          <div class="conf-val">{{ (prediction.ml_score * 100)|round(1) }}% fake</div>
-        </div>
-      </div>
-    </div>
-
   </div>
+
+  <!-- Model confidence -->
+  <div class="card">
+    <div class="card-title">Model confidence</div>
+    <div class="conf-grid">
+      <div class="conf-box">
+        <div class="conf-num">{{ (prediction.lr_prob*100)|round(1) }}%</div>
+        <div class="conf-lbl">Logistic Regression</div>
+      </div>
+      <div class="conf-box">
+        <div class="conf-num">{{ (prediction.nb_prob*100)|round(1) }}%</div>
+        <div class="conf-lbl">Naive Bayes</div>
+      </div>
+      <div class="conf-box">
+        <div class="conf-num">{{ (prediction.ml_score*100)|round(1) }}%</div>
+        <div class="conf-lbl">Ensemble</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const score    = {{ (prediction.final_score * 100)|round(1) }};
+const label    = "{{ prediction.risk_label }}";
+const riskColor = label === "Safe" ? "#4ade80" : label === "Suspicious" ? "#fbbf24" : "#f87171";
+const chartData = {{ chart_data | safe }};
+
+// Donut chart
+new Chart(document.getElementById("donut"), {
+  type: "doughnut",
+  data: {
+    datasets: [{
+      data: [score, 100 - score],
+      backgroundColor: [riskColor, "#1a1a1a"],
+      borderWidth: 0,
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    cutout: "74%",
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: false }
+    },
+    animation: { animateRotate: true, duration: 900 }
+  },
+  plugins: [{
+    id: "centerText",
+    afterDraw(chart) {
+      const { ctx, chartArea: { width, height, left, top } } = chart;
+      ctx.save();
+      ctx.font = "700 22px -apple-system, sans-serif";
+      ctx.fillStyle = riskColor;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(score + "%", left + width/2, top + height/2);
+      ctx.restore();
+    }
+  }]
+});
+
+// Bar chart
+new Chart(document.getElementById("barChart"), {
+  type: "bar",
+  data: {
+    labels: chartData.labels,
+    datasets: [{
+      data: chartData.values,
+      backgroundColor: chartData.values.map(v =>
+        v < 35 ? "rgba(74,222,128,0.7)" : v < 65 ? "rgba(251,191,36,0.7)" : "rgba(248,113,113,0.7)"
+      ),
+      borderRadius: 5,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: "y",
+    scales: {
+      x: {
+        max: 100,
+        grid: { color: "#1a1a1a" },
+        ticks: { color: "#444", font: { size: 11 }, callback: v => v + "%" }
+      },
+      y: {
+        grid: { display: false },
+        ticks: { color: "#666", font: { size: 11 } }
+      }
+    },
+    plugins: { legend: { display: false }, tooltip: {
+      callbacks: { label: ctx => " " + ctx.raw + "%" }
+    }},
+    animation: { duration: 800 }
+  }
+});
+</script>
 </body>
 </html>

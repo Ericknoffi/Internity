@@ -1,95 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fake Job Detector</title>
-</head>
-<body style="font-family:sans-serif; max-width:700px; margin:40px auto; padding:20px;">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fake Job Detector</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0f0f0f;color:#e8e8e8;padding:32px 20px;min-height:100vh}
+.wrapper{max-width:720px;margin:0 auto}
+.hero{text-align:center;margin-bottom:36px}
+.badge{display:inline-block;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:20px;padding:4px 14px;font-size:11px;color:#666;margin-bottom:16px;letter-spacing:1px;text-transform:uppercase}
+.hero h1{font-size:34px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:10px}
+.hero p{font-size:15px;color:#666;max-width:480px;margin:0 auto;line-height:1.6}
 
-  <h1>Fake Job Detector</h1>
-  <p style="color:#666;">Paste a job description, enter a URL, or upload a PDF.</p>
+/* Stats bar */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+.stat{background:#161616;border:1px solid #1e1e1e;border-radius:10px;padding:14px;text-align:center}
+.stat-num{font-size:20px;font-weight:700;color:#fff}
+.stat-lbl{font-size:11px;color:#555;margin-top:3px;text-transform:uppercase;letter-spacing:0.4px}
+
+/* Main card */
+.card{background:#161616;border:1px solid #222;border-radius:16px;padding:26px;margin-bottom:20px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:#0f0f0f;border-radius:10px;padding:4px;margin-bottom:22px}
+.tab{flex:1;padding:9px;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:#555;transition:all 0.2s}
+.tab.active{background:#1f1f1f;color:#fff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Inputs */
+.textarea-wrap{position:relative}
+textarea{width:100%;background:#0f0f0f;border:1px solid #222;border-radius:10px;padding:14px;font-size:14px;font-family:inherit;color:#e8e8e8;resize:vertical;outline:none;transition:border-color 0.2s;min-height:180px}
+textarea:focus{border-color:#333}
+.char-count{position:absolute;bottom:10px;right:14px;font-size:11px;color:#444}
+input[type=url]{width:100%;background:#0f0f0f;border:1px solid #222;border-radius:10px;padding:13px 14px;font-size:14px;font-family:inherit;color:#e8e8e8;outline:none;transition:border-color 0.2s}
+input[type=url]:focus{border-color:#333}
+.hint{font-size:12px;color:#444;margin-top:8px;line-height:1.5}
+
+/* Upload */
+.upload-zone{border:2px dashed #222;border-radius:12px;padding:44px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:#0f0f0f}
+.upload-zone:hover{border-color:#333;background:#111}
+.upload-icon{font-size:28px;color:#333;margin-bottom:10px}
+.upload-zone p{font-size:14px;color:#555}
+
+/* Submit */
+.btn{width:100%;margin-top:18px;padding:14px;background:#fff;color:#000;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.2s;letter-spacing:0.2px}
+.btn:hover{opacity:0.88}
+
+/* Error */
+.error{background:#160a0a;border:1px solid #2e1010;color:#f87171;padding:14px 16px;border-radius:10px;font-size:13px;margin-bottom:18px;line-height:1.5}
+.error strong{display:block;margin-bottom:4px;font-size:14px}
+
+/* Tips section */
+.tips-card{background:#161616;border:1px solid #1e1e1e;border-radius:16px;padding:24px;margin-bottom:20px}
+.tips-title{font-size:13px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:16px}
+.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tip{background:#0f0f0f;border:1px solid #1a1a1a;border-radius:10px;padding:14px}
+.tip-icon{font-size:18px;margin-bottom:7px}
+.tip-title{font-size:13px;font-weight:600;color:#ccc;margin-bottom:4px}
+.tip-text{font-size:12px;color:#555;line-height:1.5}
+
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}.tips-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="hero">
+    <div class="badge">AI-Powered &middot; Free &middot; Instant</div>
+    <h1>Fake Job Detector</h1>
+    <p>Instantly analyze any job posting for fraud signals using machine learning and explainable AI.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-num">2</div><div class="stat-lbl">ML Models</div></div>
+    <div class="stat"><div class="stat-num">5</div><div class="stat-lbl">Risk Signals</div></div>
+    <div class="stat"><div class="stat-num">SHAP</div><div class="stat-lbl">Explainable AI</div></div>
+    <div class="stat"><div class="stat-num">&lt;3s</div><div class="stat-lbl">Analysis Time</div></div>
+  </div>
 
   {% if error %}
-  <div style="background:#fef2f2;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:16px;">
+  <div class="error">
+    <strong>Could not analyze this input</strong>
     {{ error }}
   </div>
   {% endif %}
 
-  <div style="background:#fff;border:1px solid #e5e5e3;border-radius:12px;padding:24px;">
-
-    <div style="display:flex;gap:8px;margin-bottom:20px;">
-      <button id="btn-text" onclick="switchTab('text',this)"
-        style="padding:8px 18px;border:1px solid #ccc;border-radius:8px;cursor:pointer;background:#1a1a1a;color:#fff;">
-        Paste Text
-      </button>
-      <button id="btn-url" onclick="switchTab('url',this)"
-        style="padding:8px 18px;border:1px solid #ccc;border-radius:8px;cursor:pointer;background:#fff;color:#333;">
-        Job URL
-      </button>
-      <button id="btn-pdf" onclick="switchTab('pdf',this)"
-        style="padding:8px 18px;border:1px solid #ccc;border-radius:8px;cursor:pointer;background:#fff;color:#333;">
-        Upload PDF
-      </button>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('text',this)">Paste Text</button>
+      <button class="tab"        onclick="switchTab('url',this)">Job URL</button>
+      <button class="tab"        onclick="switchTab('pdf',this)">Upload PDF</button>
     </div>
 
-    <form action="/analyze" method="POST" enctype="multipart/form-data">
+    <form action="/analyze" method="POST" enctype="multipart/form-data" onsubmit="return validate()">
       <input type="hidden" name="input_type" id="itype" value="text"/>
 
-      <!-- Text tab -->
-      <div id="tab-text">
-        <textarea name="job_text" rows="10"
-          style="width:100%;padding:12px;border:1px solid #e5e5e3;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;"
-          placeholder="Paste the full job description here..."></textarea>
-      </div>
-
-      <!-- URL tab -->
-      <div id="tab-url" style="display:none;">
-        <input type="url" name="url"
-          style="width:100%;padding:12px;border:1px solid #e5e5e3;border-radius:8px;font-size:14px;"
-          placeholder="https://www.indeed.com/viewjob?jk=..."/>
-        <p style="font-size:13px;color:#888;margin-top:6px;">
-          Works with Indeed, Naukri, and most job boards. LinkedIn is not supported.
-        </p>
-      </div>
-
-      <!-- PDF tab -->
-      <div id="tab-pdf" style="display:none;">
-        <div onclick="document.getElementById('pdf_file').click()"
-          style="border:2px dashed #ccc;border-radius:10px;padding:40px;text-align:center;cursor:pointer;">
-          <p style="font-size:16px;color:#888;">Click to select a PDF file</p>
-          <p style="font-size:13px;color:#aaa;">Max 5MB</p>
-          <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" style="display:none"
-            onchange="document.getElementById('fname').textContent = this.files[0]?.name"/>
+      <!-- Text -->
+      <div id="tab-text" class="tab-content active">
+        <div class="textarea-wrap">
+          <textarea id="job_text" name="job_text"
+            placeholder="Paste the full job description here — include title, responsibilities, requirements, salary and company info for best accuracy..."
+            oninput="updateCount()"></textarea>
+          <div class="char-count" id="charcount">0 words</div>
         </div>
-        <p id="fname" style="font-size:13px;color:#888;margin-top:8px;"></p>
+        <p class="hint">Tip: paste the complete posting for best accuracy. Short snippets may not be detected correctly.</p>
       </div>
 
-      <button type="submit"
-        style="width:100%;margin-top:20px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;">
-        Analyze Job Posting
-      </button>
+      <!-- URL -->
+      <div id="tab-url" class="tab-content">
+        <input type="url" name="url" id="url_input"
+          placeholder="https://www.indeed.com/viewjob?jk=..."/>
+        <p class="hint">Works with Indeed, Naukri, SimplyHired and most job boards. LinkedIn blocks scraping — paste the text manually instead.</p>
+      </div>
 
+      <!-- PDF -->
+      <div id="tab-pdf" class="tab-content">
+        <div class="upload-zone" onclick="document.getElementById('pdf_file').click()">
+          <div class="upload-icon">&#8679;</div>
+          <p>Click to select a PDF job posting</p>
+          <p class="hint" style="margin-top:6px">Max 5MB &middot; Text-based PDFs only (not scanned images)</p>
+          <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" style="display:none"
+            onchange="showFile(this)"/>
+        </div>
+        <p id="fname" class="hint" style="margin-top:8px;text-align:center"></p>
+      </div>
+
+      <button type="submit" class="btn">Analyze Job Posting &rarr;</button>
     </form>
   </div>
 
-  <script>
-    function switchTab(name, btn) {
-      ['text','url','pdf'].forEach(t => {
-        document.getElementById('tab-'+t).style.display = 'none';
-      });
-      document.getElementById('tab-'+name).style.display = 'block';
-      document.getElementById('itype').value = name;
+  <!-- Tips -->
+  <div class="tips-card">
+    <div class="tips-title">How to spot a fake job posting</div>
+    <div class="tips-grid">
+      <div class="tip">
+        <div class="tip-icon">&#128176;</div>
+        <div class="tip-title">Unrealistic salary</div>
+        <div class="tip-text">Salaries far above market rate for the role or experience level are a major red flag.</div>
+      </div>
+      <div class="tip">
+        <div class="tip-icon">&#128241;</div>
+        <div class="tip-title">Personal contact info</div>
+        <div class="tip-text">Legitimate companies use official email domains, not Gmail or WhatsApp for hiring.</div>
+      </div>
+      <div class="tip">
+        <div class="tip-icon">&#9889;</div>
+        <div class="tip-title">Urgency language</div>
+        <div class="tip-text">"Apply now", "limited seats", "urgent hiring" — pressure tactics are common in scams.</div>
+      </div>
+      <div class="tip">
+        <div class="tip-icon">&#128203;</div>
+        <div class="tip-title">Vague requirements</div>
+        <div class="tip-text">"No experience needed", "anyone can apply" — real jobs have specific skill requirements.</div>
+      </div>
+      <div class="tip">
+        <div class="tip-icon">&#127968;</div>
+        <div class="tip-title">Work from home bait</div>
+        <div class="tip-text">Scam postings heavily promote easy remote work with guaranteed high income.</div>
+      </div>
+      <div class="tip">
+        <div class="tip-icon">&#128269;</div>
+        <div class="tip-title">No company info</div>
+        <div class="tip-text">Real companies include their name, website, and office location in job postings.</div>
+      </div>
+    </div>
+  </div>
 
-      ['btn-text','btn-url','btn-pdf'].forEach(id => {
-        const b = document.getElementById(id);
-        b.style.background = '#fff';
-        b.style.color = '#333';
-      });
-      btn.style.background = '#1a1a1a';
-      btn.style.color = '#fff';
+</div>
+
+<script>
+function switchTab(name, btn) {
+  ['text','url','pdf'].forEach(t => {
+    document.getElementById('tab-'+t).classList.remove('active');
+  });
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('itype').value = name;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function updateCount() {
+  const txt   = document.getElementById('job_text').value.trim();
+  const words = txt ? txt.split(/\s+/).length : 0;
+  const chars = txt.length;
+  document.getElementById('charcount').textContent = words + ' words · ' + chars + ' chars';
+}
+
+function showFile(input) {
+  document.getElementById('fname').textContent =
+    input.files[0] ? 'Selected: ' + input.files[0].name : '';
+}
+
+function validate() {
+  const type = document.getElementById('itype').value;
+  if (type === 'text') {
+    const txt = document.getElementById('job_text').value.trim();
+    if (txt.length < 50) {
+      alert('Please paste a complete job description (at least 50 characters).');
+      return false;
     }
-  </script>
-
+  } else if (type === 'url') {
+    const url = document.getElementById('url_input').value.trim();
+    if (!url.startsWith('http')) {
+      alert('Please enter a valid URL starting with http:// or https://');
+      return false;
+    }
+  }
+  return true;
+}
+</script>
 </body>
 </html>

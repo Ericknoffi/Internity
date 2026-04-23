@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta http-equiv="refresh" content="2;url=/process"/>
+<title>Analyzing...</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0f0f0f;color:#e8e8e8;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.wrap{text-align:center;padding:40px}
+.spinner{width:56px;height:56px;border:3px solid #222;border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 28px}
+@keyframes spin{to{transform:rotate(360deg)}}
+h2{font-size:20px;font-weight:600;color:#fff;margin-bottom:10px}
+.sub{font-size:14px;color:#555;margin-bottom:32px}
+.steps{list-style:none;text-align:left;display:inline-block}
+.step{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:13px;color:#444;transition:color 0.4s}
+.step.active{color:#e8e8e8}
+.step.done{color:#4ade80}
+.step-dot{width:8px;height:8px;border-radius:50%;background:#222;flex-shrink:0;transition:background 0.4s}
+.step.active .step-dot{background:#fff;box-shadow:0 0 6px rgba(255,255,255,0.4)}
+.step.done .step-dot{background:#4ade80}
+.progress-bar{width:280px;height:3px;background:#1a1a1a;border-radius:2px;margin:28px auto 0;overflow:hidden}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#fff);border-radius:2px;transition:width 0.5s ease}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="spinner"></div>
+  <h2>Analyzing job posting...</h2>
+  <p class="sub">This usually takes 2–4 seconds</p>
+
+  <ul class="steps">
+    <li class="step active" id="s1"><div class="step-dot"></div>Cleaning and preprocessing text</li>
+    <li class="step"        id="s2"><div class="step-dot"></div>Running ML classification</li>
+    <li class="step"        id="s3"><div class="step-dot"></div>Checking salary anomalies</li>
+    <li class="step"        id="s4"><div class="step-dot"></div>Detecting contact red flags</li>
+    <li class="step"        id="s5"><div class="step-dot"></div>Computing SHAP explanations</li>
+  </ul>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="prog"></div>
+  </div>
+</div>
+
+<script>
+const steps = [1,2,3,4,5];
+let current = 0;
+
+function tick() {
+  if (current > 0) {
+    document.getElementById("s"+current).classList.remove("active");
+    document.getElementById("s"+current).classList.add("done");
+  }
+  current++;
+  if (current <= 5) {
+    document.getElementById("s"+current).classList.add("active");
+    document.getElementById("prog").style.width = (current/5*100)+"%";
+    setTimeout(tick, 480);
+  }
+}
+
+setTimeout(tick, 300);
+
+// Navigate after animation completes
+setTimeout(() => { window.location.href = "/process"; }, 2600);
+</script>
+</body>
+</html>
