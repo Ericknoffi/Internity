@@ -33,3 +33,9 @@ With the rapid growth of online job platforms, fake job and internship postings 
 ---
 
 ## 📂 Project Structure
+VerifID/
+│── data/ # Dataset
+│── model/ # Trained model files
+│── app.py # Main application
+│── train.py # Model training script
+
