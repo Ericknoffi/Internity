@@ -1,0 +1,41 @@
+{
+  "model_version": "2.0.0",
+  "training_timestamp": "2026-10-22T10:32:39.749613Z",
+  "dataset": "Kaggle Real or Fake JobPosting Prediction (17,880 samples)",
+  "vectorizer": {
+    "type": "TfidfVectorizer",
+    "max_features": 15000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "min_df": 2,
+    "sublinear_tf": true,
+    "stop_words": "english"
+  },
+  "primary_model": {
+    "type": "LogisticRegression",
+    "C": 2.5,
+    "class_weight": {
+      "0": 1.0,
+      "1": 8.0
+    },
+    "weight_in_ensemble": 0.65
+  },
+  "secondary_model": {
+    "type": "SGDClassifier",
+    "loss": "modified_huber",
+    "alpha": 1e-05,
+    "weight_in_ensemble": 0.35
+  },
+  "benchmark_metrics": {
+    "test_split": 0.2,
+    "test_samples": 3576,
+    "fake_precision": 0.94,
+    "fake_recall": 0.815,
+    "fake_f1_score": 0.8731,
+    "accuracy": 0.9885,
+    "roc_auc": 0.9901,
+    "pr_auc": 0.9371
+  }
+}
